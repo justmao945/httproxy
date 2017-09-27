@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -143,7 +144,7 @@ func (self *Server) Connect(w http.ResponseWriter, r *http.Request) {
 	defer src.Close()
 
 	// connect the remote client directly
-	dst, err := self.Tr.Dial("tcp", r.URL.Host)
+	dst, err := net.Dial("tcp", r.URL.Host)
 	if err != nil {
 		L.Printf("Dial: %s\n", err.Error())
 		src.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
