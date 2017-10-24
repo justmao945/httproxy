@@ -157,12 +157,16 @@ func (self *Server) Connect(w http.ResponseWriter, r *http.Request) {
 
 	// Proxy is no need to know anything, just exchange data between the client
 	// the the remote server.
-	copyAndWait := func(dst io.Writer, src io.Reader, c chan int64) {
+	copyAndWait := func(dst, src net.Conn, c chan int64) {
 		n, err := io.Copy(dst, src)
 		if err != nil {
 			L.Printf("Copy: %s\n", err.Error())
 			// FIXME: how to report error to dst ?
 		}
+		// src is closed, should close dst, also set src write deadline
+		t := time.Now().Add(10 * time.Second)
+		dst.SetDeadline(t)
+		src.SetDeadline(t)
 		c <- n
 	}
 
