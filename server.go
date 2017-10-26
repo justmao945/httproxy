@@ -163,10 +163,7 @@ func (self *Server) Connect(w http.ResponseWriter, r *http.Request) {
 			L.Printf("Copy: %s\n", err.Error())
 			// FIXME: how to report error to dst ?
 		}
-		// src is closed, should close dst, also set src write deadline
-		t := time.Now().Add(10 * time.Second)
-		dst.SetDeadline(t)
-		src.SetDeadline(t)
+		dst.Close()
 		c <- n
 	}
 
