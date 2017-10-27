@@ -1,4 +1,4 @@
-package main
+package http
 
 import (
 	"io"
@@ -47,7 +47,7 @@ func NewServer() (self *Server, err error) {
 //    to the remote server and copy the reponse to client.
 //
 func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	L.Printf("%s %s %s\n", r.Method, r.RequestURI, r.Proto)
+	log.Printf("%s %s %s\n", r.Method, r.RequestURI, r.Proto)
 
 	if r.Method == "CONNECT" {
 		self.Connect(w, r)
@@ -69,7 +69,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		r.Header.Del("Connection")
 		self.HTTP(w, r)
 	} else {
-		L.Printf("%s is not a full URL path\n", r.RequestURI)
+		log.Printf("%s is not a full URL path\n", r.RequestURI)
 	}
 }
 
@@ -91,7 +91,7 @@ func (self *Server) HTTP(w http.ResponseWriter, r *http.Request) {
 	// The underlying RoundTrip never changes anything of the request.
 	resp, err := self.Tr.RoundTrip(r)
 	if err != nil {
-		L.Printf("RoundTrip: %s\n", err.Error())
+		log.Printf("RoundTrip: %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -103,14 +103,14 @@ func (self *Server) HTTP(w http.ResponseWriter, r *http.Request) {
 
 	n, err := io.Copy(w, resp.Body)
 	if err != nil {
-		L.Printf("Copy: %s\n", err.Error())
+		log.Printf("Copy: %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	d := BeautifyDuration(time.Since(start))
 	ndtos := BeautifySize(n)
-	L.Printf("RESPONSE %s %s in %s <-%s\n", r.URL.Host, resp.Status, d, ndtos)
+	log.Printf("RESPONSE %s %s in %s <-%s\n", r.URL.Host, resp.Status, d, ndtos)
 }
 
 // Data flow:
@@ -137,7 +137,7 @@ func (self *Server) Connect(w http.ResponseWriter, r *http.Request) {
 
 	src, _, err := hij.Hijack()
 	if err != nil {
-		L.Printf("Hijack: %s\n", err.Error())
+		log.Printf("Hijack: %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -146,7 +146,7 @@ func (self *Server) Connect(w http.ResponseWriter, r *http.Request) {
 	// connect the remote client directly
 	dst, err := net.Dial("tcp", r.URL.Host)
 	if err != nil {
-		L.Printf("Dial: %s\n", err.Error())
+		log.Printf("Dial: %s\n", err.Error())
 		src.Write([]byte("HTTP/1.1 500 Internal Server Error\r\n\r\n"))
 		return
 	}
@@ -160,7 +160,7 @@ func (self *Server) Connect(w http.ResponseWriter, r *http.Request) {
 	copyAndWait := func(dst, src net.Conn, c chan int64) {
 		n, err := io.Copy(dst, src)
 		if err != nil {
-			L.Printf("Copy: %s\n", err.Error())
+			log.Printf("Copy: %s\n", err.Error())
 			// FIXME: how to report error to dst ?
 		}
 		dst.Close()
@@ -180,5 +180,5 @@ func (self *Server) Connect(w http.ResponseWriter, r *http.Request) {
 	// EOF and are done!
 	nstod, ndtos := BeautifySize(<-stod), BeautifySize(<-dtos)
 	d := BeautifyDuration(time.Since(start))
-	L.Printf("CLOSE %s after %s ->%s <-%s\n", r.URL.Host, d, nstod, ndtos)
+	log.Printf("CLOSE %s after %s ->%s <-%s\n", r.URL.Host, d, nstod, ndtos)
 }
