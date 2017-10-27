@@ -1,5 +1,5 @@
 # httproxy
-A simple HTTP/HTTPS proxy
+A simple HTTP/HTTPS/SOCKS5 proxy.
 
 # Installation
 
@@ -7,8 +7,8 @@ A simple HTTP/HTTPS proxy
 
 # Usage
 
-* Install httproxy on the proxy machine and start it with `httproxy -addr=:1081`.
-* Can work with [KCPTUN][2] to build a tunnel http proxy...
+* Install httproxy on the proxy machine and start it with `httproxy -addr=:1080`
+* Can work with [KCPTUN][2] to build a tunnel http/socks5 proxy...
 
 # More
 
