@@ -58,7 +58,7 @@ type Server struct {
 }
 
 // New creates a new Server and potentially returns an error
-func New(conf *Config) (*Server, error) {
+func New(conf *Config) *Server {
 	// Ensure we have at least one authentication method enabled
 	if len(conf.AuthMethods) == 0 {
 		if conf.Credentials != nil {
@@ -80,7 +80,7 @@ func New(conf *Config) (*Server, error) {
 
 	// Ensure we have a log target
 	if conf.Logger == nil {
-		conf.Logger = log.New(os.Stdout, "", log.LstdFlags)
+		conf.Logger = log.New(os.Stderr, "socks:", log.LstdFlags|log.Lshortfile)
 	}
 
 	server := &Server{
@@ -93,7 +93,7 @@ func New(conf *Config) (*Server, error) {
 		server.authMethods[a.GetCode()] = a
 	}
 
-	return server, nil
+	return server
 }
 
 // ListenAndServe is used to create a listener and serve on it

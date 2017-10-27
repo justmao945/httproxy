@@ -175,7 +175,7 @@ func (s *Server) handleConnect(ctx context.Context, conn conn, req *Request) err
 		}
 	}
 
-	s.config.Logger.Printf("Connect %v", req.realDestAddr.Address())
+	s.config.Logger.Printf("connect %v", req.realDestAddr.Address())
 	defer s.config.Logger.Printf("close %v", req.realDestAddr.Address())
 
 	target, err := dial(ctx, "tcp", req.realDestAddr.Address())
