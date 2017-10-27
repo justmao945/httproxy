@@ -62,6 +62,9 @@ func (c connector) connect(src net.Conn) {
 }
 
 func doHttp(ctx *fasthttp.RequestCtx) {
+	header := ctx.Request.Header
+	header.Del("Proxy-Connection")
+	header.Del("Connection")
 	err := fasthttp.Do(&ctx.Request, &ctx.Response)
 	if err != nil {
 		log.Printf("do http failed: %v\n", err)
