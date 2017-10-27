@@ -120,8 +120,8 @@ func (s *Server) Serve(l net.Listener) error {
 // ServeConn is used to serve a single connection.
 func (s *Server) ServeConn(conn net.Conn) error {
 	defer conn.Close()
-	bufConn := bufio.NewReader(conn)
 
+	bufConn := bufio.NewReader(conn)
 	// Read the version byte
 	version := []byte{0}
 	if _, err := bufConn.Read(version); err != nil {
