@@ -34,7 +34,8 @@ func (c connector) connect(src net.Conn) {
 	// Proxy is no need to know anything, just exchange data between the client
 	// the the remote server.
 	copyAndWait := func(dst, src net.Conn, c chan int64) {
-		n, err := io.Copy(dst, src)
+		buf := make([]byte, 1024) // smaller buf smaller latency
+		n, err := io.CopyBuffer(dst, src, buf)
 		if err != nil {
 			L.Printf("Copy: %s\n", err.Error())
 			// FIXME: how to report error to dst ?
