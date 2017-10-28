@@ -62,12 +62,18 @@ func (c connector) connect(src net.Conn) {
 	dtos := make(chan int64)
 	go copyAndWait(src, dst, dtos)
 
-	// Generally, the remote server would keep the connection alive,
-	// so we will not close the connection until both connection recv
-	// EOF and are done!
-	nstod, ndtos := BeautifySize(<-stod), BeautifySize(<-dtos)
+	var nstod, ndtos int64
+	for i := 0; i < 2; {
+		select {
+		case nstod = <-stod:
+			i++
+		case ndtos = <-dtos:
+			i++
+		}
+	}
 	d := BeautifyDuration(time.Since(start))
-	L.Printf("CLOSE %s after %s ->%s <-%s\n", c.remoteAddr, d, nstod, ndtos)
+	L.Printf("CLOSE %s after %s ->%s <-%s\n",
+		c.remoteAddr, d, BeautifySize(nstod), BeautifySize(ndtos))
 }
 
 func doHttp(ctx *fasthttp.RequestCtx) {
