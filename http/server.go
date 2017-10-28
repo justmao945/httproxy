@@ -7,10 +7,17 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 	"time"
 )
 
 var L = log.New(os.Stderr, "http: ", log.Lshortfile|log.LstdFlags)
+
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 1024)
+	},
+}
 
 type closeWriter interface {
 	CloseWrite() error
@@ -34,8 +41,9 @@ func (c connector) connect(src net.Conn) {
 	// Proxy is no need to know anything, just exchange data between the client
 	// the the remote server.
 	copyAndWait := func(dst, src net.Conn, c chan int64) {
-		buf := make([]byte, 1024) // smaller buf smaller latency
+		buf := bufPool.Get().([]byte) // smaller buf smaller latency
 		n, err := io.CopyBuffer(dst, src, buf)
+		bufPool.Put(buf)
 		if err != nil {
 			L.Printf("Copy: %s\n", err.Error())
 			// FIXME: how to report error to dst ?

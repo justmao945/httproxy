@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 
 	"golang.org/x/net/context"
 )
@@ -357,11 +358,18 @@ type closeWriter interface {
 	CloseWrite() error
 }
 
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 1024)
+	},
+}
+
 // proxy is used to suffle data from src to destination, and sends errors
 // down a dedicated channel
 func proxy(dst io.Writer, src io.Reader, errCh chan error) {
-	buf := make([]byte, 1024) // smaller buf smaller latency
+	buf := bufPool.Get().([]byte) // smaller buf smaller latency
 	_, err := io.CopyBuffer(dst, src, buf)
+	bufPool.Put(buf)
 	if tcpConn, ok := dst.(closeWriter); ok {
 		tcpConn.CloseWrite()
 	}
