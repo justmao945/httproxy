@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -25,6 +26,16 @@ type closeWriter interface {
 
 type connector struct {
 	remoteAddr string
+}
+
+func newConnector(host string) connector {
+	_, _, err := net.SplitHostPort(host)
+	if err != nil && strings.Contains(err.Error(), "missing port in address") {
+		host += ":443"
+	}
+	return connector{
+		remoteAddr: host,
+	}
 }
 
 func (c connector) connect(src net.Conn) {
@@ -90,7 +101,7 @@ func ServeFastHTTP(ctx *fasthttp.RequestCtx) {
 	L.Printf("%s %s\n", ctx.Method(), ctx.RequestURI())
 
 	if bytes.Equal(ctx.Method(), []byte("CONNECT")) {
-		var c = connector{string(ctx.URI().Host())}
+		var c = newConnector(string(ctx.URI().Host()))
 		ctx.Hijack(c.connect)
 		ctx.Write([]byte{}) // close stream and do hijack
 	} else if uri := ctx.URI(); len(uri.Host()) > 0 {
